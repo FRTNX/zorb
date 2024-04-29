@@ -1,2 +1,5 @@
 # zorb
-zorb absorbs.
+
+> a thing.
+
+`zorb` absorbs.
