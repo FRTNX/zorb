@@ -1,5 +1,7 @@
-from news_event import NewsEvent
+from events import NewsEvent
 from fetchers.mapper import get_fetcher
+
+from logging import Logger
 
 class EventStream:
     """Container for NewsEvents.
@@ -7,8 +9,9 @@ class EventStream:
     Fetches event articles for all new NewsEvents before adding them to some
     sequence structure.
     """
-    def __init__(self):
+    def __init__(self, logging: Logger):
         self._events = []  # replace with other data structures for experiments
+        self._logging = logging
         
     def __getitem__(self, j):
         return self._events[j]
@@ -22,10 +25,6 @@ class EventStream:
 
     def _fetch_article(self, source, article_url):
         """Fetches articles from various sources via specialised fetchers.
-        
-        Args:
-            source (_type_): _description_
-            article_url (_type_): _description_
         """
         fetcher = get_fetcher(source)
         if not fetcher:
@@ -41,7 +40,7 @@ class EventStream:
                 if article:
                     event.set_article(article)
             self._events.append(event)
-            print('Added new NewsEvent to EventStream:', event.json()['title'])
+            self._logging.info('Added new NewsEvent to EventStream: ' + event.json()['title'])
         else:
             raise TypeError('Invalid type: ' + type(event))
     

@@ -1,68 +1,53 @@
-import os
-import time
 import logging
-
-from event_stream import EventStream
 from watchers.watchman import WatchMan
 
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from event_stream import EventStream
+from orb import Orb
 
+from fastapi import FastAPI
 from config import config
-
 
 logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s - %(message)s',
                         datefmt='[zorb] %Y-%m-%d %H:%M:%S')
 
 # the idea is to have a single event stream, imported where needed.
-event_stream = EventStream()
+event_stream = EventStream(logging=logging)
      
-watchman = WatchMan(event_stream=event_stream, config=config['watchers'])
+watchman = WatchMan(event_stream=event_stream, config=config['watchers'], logging=logging)
 watchman.deploy()
 
+orb = Orb(event_stream=event_stream)
 
-class FileModifiedEventHandler(FileSystemEventHandler):
-    """Logs file modifications."""
+# parser = ArgumentParser("Query Zorb's event stream.")
+# parser.add_argument('-c', '--count', action='store_true', help='Return number of events in event stream.')
+# parser.add_argument('-k', '--keyword', type=str, help='Search events by keyword.')
+# parser.add_argument('-s', '--source', type=str, help='Search events by source.')
 
-    def on_modified(self, event):
-        super().on_modified(event)
-        if not event.is_directory:
-            logging.info(f'Modified motherfucking file: {event.src_path}')
-            path, filename = os.path.split(event.src_path)
-            watcher_name = watchman.watcher_by_path(path)
-            watchman.handle_change(watcher_name, filename)
+app = FastAPI()
 
+@app.get('/count')
+def count():
+    return { 'events': orb.count() }
 
-if __name__ == '__main__':
-    event_handler = FileModifiedEventHandler()
-    observer = Observer()
+# if __name__ == '__main__':
+#     orb = Orb(event_stream=event_stream)
+#     # args = parser.parse_args()
     
-    observables = [
-        {
-            'name': 'libera',
-            'handler': event_handler,
-            'path': config['watchers']['libera']['path']
-        },
-        {
-            'name': 'decoy',
-            'handler': event_handler,
-            'path': config['watchers']['decoy']['path']
-        }
-    ]
-    for observable in observables:
-        logging.info('start watching directory {path}')
-        observer.schedule(observable['handler'], observable['path'])
-    
-    observer.start()
-    
-    try:
-        while True:
-            time.sleep(1)
-    finally:
-        observer.unschedule_all()
-        observer.stop()
-        observer.join()
+#     while True:
+#         user_input = input('[zorb] > ')
+        
+#         if user_input == 'count':
+#             print(orb.count())
 
+#         elif user_input.startswith('-kw '):
+#             keyword = user_input[3:]
+#             print(list(orb.events_by_keyword(keyword)))
+            
+#         elif user_input.startswith('-s '):
+#             source = user_input[2:]
+#             print(orb.events_by_source(source))    
 
+#         else:
+#             print('Unrecognised command.')
 
