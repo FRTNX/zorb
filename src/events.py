@@ -1,5 +1,14 @@
+from abc import ABCMeta, abstractmethod
 
-class NewsEvent:
+class Event(metaclass=ABCMeta):
+    """Event base class."""
+    
+    @abstractmethod
+    def json(self) -> dict:
+        """Return event as dict."""
+
+
+class NewsEvent(Event):
     """Captures a news event and its meta data.
     """
     def __init__(self, title: str, source: str, article_url: str):

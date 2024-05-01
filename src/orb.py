@@ -1,3 +1,4 @@
+
 class Orb:
     """EventStream adapter for querying event stream."""
     def __init__(self, event_stream):
@@ -9,13 +10,8 @@ class Orb:
     
     def events_by_keyword(self, k):
         """Finds all events with keyword in title."""
-        # eventually consider searching event body's for keyword
-        for event in self._event_stream:
-            if k in event.title:
-                yield event.json()['title']
+        return self._event_stream.find_by_keyword(k)
                 
     def events_by_source(self, s):
         """Finds all events from source s."""
-        for event in self._event_stream:
-            if event.source == s:
-                yield event.json()
+        return self._event_stream.find_by_source(s)
