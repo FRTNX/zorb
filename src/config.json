@@ -4,5 +4,11 @@
             "path": "/home/frtnx/irclogs/LiberaChat",
             "targets": ["##news.log"]
         }
+    },
+    "eventStream": {
+        "pickle": {
+            "path": "./",
+            "filename": "event_stream.pkl"
+        }
     }
 }

@@ -8,6 +8,10 @@ class Orb:
         """Returns the number of events currently in the event stream."""
         return len(self._event_stream)
     
+    def events(self):
+        """Returns all events."""
+        return self._event_stream.event()
+    
     def events_by_keyword(self, k):
         """Finds all events with keyword in title."""
         return self._event_stream.find_by_keyword(k)
@@ -15,3 +19,6 @@ class Orb:
     def events_by_source(self, s):
         """Finds all events from source s."""
         return self._event_stream.find_by_source(s)
+    
+    def sources(self):
+        return self._event_stream.source_count()

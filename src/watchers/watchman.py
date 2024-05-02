@@ -23,7 +23,7 @@ class WatchMan:
         self._path_watcher_mapper = { config[watcher]['path']: watcher for watcher in list(config) }
         
         for watcher in ACTIVE_WATCHERS:
-            self.WATCHERS.append(watcher(event_stream=event_stream, config=config))
+            self.WATCHERS.append(watcher(event_stream=event_stream, config=config, logging=logging))
     
     def deploy(self):
         """Deploy all watchers in watchers list"""
