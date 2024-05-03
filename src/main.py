@@ -13,8 +13,8 @@ from config import config
 app = fastapi.FastAPI()
 
 logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='[zorb] %Y-%m-%d %H:%M:%S')
+                    format='%(asctime)s - %(message)s',
+                    datefmt='[zorb] %Y-%m-%d %H:%M:%S')
 
 # the idea is to have a single event stream, imported where needed.
 event_stream = EventStream(logging=logging, config=config['eventStream'])
@@ -23,6 +23,7 @@ orb = Orb(event_stream=event_stream)
 
 watchman = WatchMan(event_stream=event_stream, config=config['watchers'], logging=logging)
 watchman.deploy()
+watchman.auto_update()
 
 # execute after deploying watchman to benefit from retro zorb
 event_stream.auto_save()
@@ -40,7 +41,7 @@ def events(keyword: str = '', source: str = ''):
         return { 'events': orb.events_by_source(source) }   
     
     else:
-        return { 'events': orb.events() } 
+        return { 'events': orb.events() }
 
 @app.get('/sources')
 def sources():

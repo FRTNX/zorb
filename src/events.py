@@ -9,8 +9,7 @@ class Event(metaclass=ABCMeta):
 
 
 class NewsEvent(Event):
-    """Captures a news event and its meta data.
-    """
+    """Captures a news event and its meta data."""
     def __init__(self, title: str, source: str, article_url: str):
         if not title or not source or not article_url:
             raise ValueError('Missing one or more required parameters.')   
@@ -46,3 +45,7 @@ class NewsEvent(Event):
             'article_url': self._article_url,
             'article': self._article
         }
+
+
+class HackerNewsEvent(Event):
+    """"""

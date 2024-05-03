@@ -2,13 +2,19 @@
     "watchers": {
         "libera": {
             "path": "/home/frtnx/irclogs/LiberaChat",
-            "targets": ["##news.log"]
+            "targets": ["##news.log"],
+            "autoUpdate": false
+        },
+        "ycombinator": {
+            "autoUpdate": true,
+            "updateInterval": 120
         }
     },
     "eventStream": {
         "pickle": {
             "path": "./",
-            "filename": "event_stream.pkl"
+            "filename": "event_stream.pkl",
+            "autoLoad": true
         }
     }
 }

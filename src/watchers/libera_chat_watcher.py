@@ -71,7 +71,7 @@ class FileHandler:
                     continue
                     
     def zorb_new_events(self):
-        """Triggered by watchdog. Adds new events to event stream."""
+        """Triggered by WatchMan. Adds new events to event stream."""
         with open(os.path.join(self._filepath, self._filename)) as file:
             lines = file.readlines()
             last_index = lines.index(self._lastline) + 1       # exclude last line
