@@ -1,6 +1,6 @@
 
 class Orb:
-    """EventStream adapter for querying event stream."""
+    """EventStream adapter providing (only) read access."""
     def __init__(self, event_stream):
         self._event_stream = event_stream
         

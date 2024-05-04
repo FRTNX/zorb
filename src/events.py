@@ -7,7 +7,6 @@ class Event(metaclass=ABCMeta):
     def json(self) -> dict:
         """Return event as dict."""
 
-
 class NewsEvent(Event):
     """Captures a news event and its meta data."""
     def __init__(self, title: str, source: str, article_url: str):
@@ -45,7 +44,3 @@ class NewsEvent(Event):
             'article_url': self._article_url,
             'article': self._article
         }
-
-
-class HackerNewsEvent(Event):
-    """"""

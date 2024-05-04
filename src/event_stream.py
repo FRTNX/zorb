@@ -138,7 +138,7 @@ class EventStream:
         auto_save_thread.start()
         
     def _auto_save_util(self, interval):
-        """Thread function that actually does the heavy lifting."""
+        """auto_save helper function."""
         while True:
             self._pickle()
             time.sleep(interval)

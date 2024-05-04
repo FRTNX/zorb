@@ -8,5 +8,9 @@ class WatcherBase(metaclass=ABCMeta):
         """Start watcher."""
         
     @abstractmethod
+    def stop(self):
+        """Stop watcher."""
+        
+    @abstractmethod
     def zorb(self):
         """Absorb new events."""

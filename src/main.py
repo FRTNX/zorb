@@ -1,32 +1,26 @@
 import os
 import signal
-
-import logging
 import fastapi
 
 from watchers.watchman import WatchMan
 from event_stream import EventStream
 
 from orb import Orb
+
 from config import config
+from logger import logging
 
-app = fastapi.FastAPI()
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(message)s',
-                    datefmt='[zorb] %Y-%m-%d %H:%M:%S')
-
-# the idea is to have a single event stream, imported where needed.
+# the idea is to have a single event stream, used where needed
 event_stream = EventStream(logging=logging, config=config['eventStream'])
-
-orb = Orb(event_stream=event_stream)
 
 watchman = WatchMan(event_stream=event_stream, config=config['watchers'], logging=logging)
 watchman.deploy()
-watchman.auto_update()
 
 # execute after deploying watchman to benefit from retro zorb
 event_stream.auto_save()
+
+orb = Orb(event_stream=event_stream)   # provides secure read-access to event stream
+app = fastapi.FastAPI()
 
 @app.get('/count')
 def count():

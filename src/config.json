@@ -3,7 +3,8 @@
         "libera": {
             "path": "/home/frtnx/irclogs/LiberaChat",
             "targets": ["##news.log"],
-            "autoUpdate": false
+            "autoUpdate": false,
+            "updateInterval": 1
         },
         "ycombinator": {
             "autoUpdate": true,
