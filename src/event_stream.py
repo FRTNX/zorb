@@ -110,9 +110,7 @@ class EventStream:
         self._logging.info(f"Event stream saved successfully ({len(self)}).")
         
     def _load_pickle(self):
-        """Loads pickled event stream from previous session.
-        
-        Typically called on instantiation.
+        """Loads pickled event stream from previous session. Typically called on instantiation.
         """
         self._logging.info('Loading pickled event stream...')
         pickle_file = os.path.join(self._config['pickle']['path'],

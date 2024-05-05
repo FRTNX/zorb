@@ -1,9 +1,8 @@
 import logging
-from colorama import Fore
+from config import config
 
-tag_style = Fore.GREEN + 'zorb' + Fore.RESET
-date_style = Fore.LIGHTBLACK_EX + '%Y-%m-%d %H:%M:%S' + Fore.RESET
+log_config = config['logging']
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(message)s',
-                    datefmt=f'[{tag_style}] [{date_style}]')
+                    datefmt=f"[{log_config['tag_style']}] [{log_config['date_style']}]")

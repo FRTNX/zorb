@@ -15,7 +15,7 @@ from watchdog.events import FileSystemEventHandler
 from logging import Logger
 
 class LiberaChatWatcher(WatcherBase):
-    """Watches for file changes in liberachat log files."""
+    """Watches for file changes in irssi Libera Chat log files."""
     NAME = 'libera'
     
     def __init__(self, event_stream: EventStream, config: dict, logging: Logger):
@@ -24,17 +24,15 @@ class LiberaChatWatcher(WatcherBase):
         self._logging = logging
         self._file_handlers = []
         
-        self._logging.info(f'Instantiated libera watcher with config: {config}')
-        
     def start(self):
-        """Start libera chat watchers."""
+        """Start Libera Chat log file watchers."""
         for target in self._config['targets']:
             file_handler = FileHandler(filename=target, filepath=self._config['path'],
                                        event_stream=self._event_stream, logging=self._logging)
-            file_handler.retro_zorb()
+            file_handler.retro_zorb()                 # absorb existing logs into event stream
             self._file_handlers.append(file_handler)
         watchdog_thread = threading.Thread(target=self._launch_observers)
-        watchdog_thread.start()
+        watchdog_thread.start()                       # deploy watchdogs
         
     def stop(self):
         """Stop fetcher, stop watchdogs, handle clean up."""
@@ -48,7 +46,7 @@ class LiberaChatWatcher(WatcherBase):
                 
     def _launch_observers(self):
         """Launch watchdog observers (typically from thread)."""
-        self._logging.info('Launching watchdogs...')
+        self._logging.info('Launching watchdog observer...')
         event_handler = FileModifiedEventHandler(watcher=self, config=self._config,
                                                  logging=self._logging)
         observer = Observer()
@@ -87,18 +85,18 @@ class FileHandler:
         return self._filename
     
     def add(self, log):
-        tag, log = log.split('>') # todo: extract time stamp
+        tag, log = log.split('>')                       # todo: extract time stamp
         source, log = log.split(']')
         title, url = log.split('→')
         event = NewsEvent(
             title=title.strip(),
-            source=source.replace('[', '').strip(),
+            source='libera',
             article_url=url.replace('\n', '').strip()
         )
-        self._event_stream.add(event)
+        self._event_stream.add(event)                   # existing events are ignored
 
     def retro_zorb(self):
-        """Adds existing libera logs to event stream."""
+        """Adds existing irssi Libera Chat logs to event stream."""
         with open(os.path.join(self._filepath, self._filename)) as logs:
             for log in logs.readlines():
                 try:
@@ -108,10 +106,10 @@ class FileHandler:
                     continue
                     
     def zorb_new_events(self):
-        """Triggered by WatchMan. Adds new events to event stream."""
+        """Triggered by watchman. Adds new events to event stream."""
         with open(os.path.join(self._filepath, self._filename)) as file:
             lines = file.readlines()
-            last_index = lines.index(self._lastline) + 1       # exclude last line
+            last_index = lines.index(self._lastline) + 1         # exclude last line
             for line in lines[last_index:]:
                 try:
                     self.add(line)
@@ -121,14 +119,12 @@ class FileHandler:
 
 class FileModifiedEventHandler(FileSystemEventHandler):
     """Logs file modifications."""
-    
     def __init__(self, watcher: WatcherBase, config: dict, logging: Logger):
         self._logging = logging
         self._watcher = watcher
         self._config = config
 
     def on_modified(self, event):
-        # self._logging.info(f'Modified file: {event.src_path}')
         path, filename = os.path.split(event.src_path)
         if not event.is_directory and filename in self._config['targets']:            
             self._watcher.zorb(filename)
