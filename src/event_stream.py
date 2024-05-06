@@ -63,7 +63,7 @@ class EventStream:
                 sources[event.source] += 1
             else:
                 sources[event.source] = 1
-        return sorted(sources.items(), key=lambda x: x[1], reverse=True)
+        return sorted(sources.items(), key=lambda i: i[1], reverse=True)
 
     # uses threading to avoid bottleneck
     def add(self, event: NewsEvent):

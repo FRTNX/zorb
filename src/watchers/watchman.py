@@ -27,11 +27,12 @@ class WatchMan:
     
     def deploy(self):
         """Deploy all watchers in watchers list."""
-        for Watcher in self.WATCHERS:
-            Watcher.start()
-            self._logging.info(Watcher.NAME + ' watcher deployed.')
+        for watcher in self.WATCHERS:
+            watcher.start()
+            self._logging.info(watcher.NAME + ' watcher deployed.')
             
-    # future method
     def terminate(self):
         """Terminate all currently deployed watchers."""
-        return
+        for watcher in self.WATCHERS:
+            watcher.stop()
+            self._logging.info(watcher.NAME + ' terminated.')

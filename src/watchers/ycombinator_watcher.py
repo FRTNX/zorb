@@ -23,7 +23,12 @@ class YCombinatorWatcher(WatcherBase):
         """Starts _update thread that runs every update_interval."""
         update_thread = threading.Thread(target=self._update)
         update_thread.start()
-        return
+    
+    def _update(self):
+        """Update events every _update_interval."""
+        while True:
+            self.zorb()
+            time.sleep(self._update_interval)
     
     # future method
     def stop(self):
@@ -57,10 +62,3 @@ class YCombinatorWatcher(WatcherBase):
                     )
                     self._event_stream.add(event)  
             self._logging.info('Updated YCombinator Hacker News.')
-        
-    def _update(self):
-        """Update events every _update_interval."""
-        while True:
-            self.zorb()
-            time.sleep(self._update_interval)
-        

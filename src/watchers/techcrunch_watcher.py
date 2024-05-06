@@ -45,9 +45,9 @@ class TechCrunchWatcher(WatcherBase):
     def zorb(self):
         """Absorb new TechCrunch events."""
         self._logging.info('Fetching TechCrunch events...')
-        data = []
-        num_pages = self._config['num_pages']
-        for page_number in range(1, num_pages + 1):
+        data = []                                                         # data from pages aggregated here
+        num_pages = self._config['num_pages']                             # number of pages to fetch
+        for page_number in range(1, num_pages + 1):                       # pages are 1 indexed
             try:
                 params = {
                     'page': str(page_number),
@@ -72,7 +72,7 @@ class TechCrunchWatcher(WatcherBase):
                 # todo: consider time.sleep here to avoid being blocked by techcrunch servers
             except Exception as e:
                 self._logging.error('Error fetching TechCrunch events: ' + str(e))
-                continue
+                continue                                                 # in case error is localised
         
         if len(data) > 0:
             for item in data:

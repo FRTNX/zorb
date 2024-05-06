@@ -29,11 +29,12 @@ class LiberaChatWatcher(WatcherBase):
         for target in self._config['targets']:
             file_handler = FileHandler(filename=target, filepath=self._config['path'],
                                        event_stream=self._event_stream, logging=self._logging)
-            file_handler.retro_zorb()                 # absorb existing logs into event stream
+            file_handler.retro_zorb()                         # absorb existing logs into event stream
             self._file_handlers.append(file_handler)
         watchdog_thread = threading.Thread(target=self._launch_observers)
-        watchdog_thread.start()                       # deploy watchdog
+        watchdog_thread.start()                               # deploy watchdog
         
+    # future method
     def stop(self):
         """Stop fetcher, stop watchdogs, handle clean up."""
         return
@@ -109,7 +110,7 @@ class FileHandler:
         """Triggered by watchman. Adds new events to event stream."""
         with open(os.path.join(self._filepath, self._filename)) as file:
             lines = file.readlines()
-            last_index = lines.index(self._lastline) + 1         # exclude last line
+            last_index = lines.index(self._lastline) + 1  # exclude last line
             for line in lines[last_index:]:
                 try:
                     self.add(line)
