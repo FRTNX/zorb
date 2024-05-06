@@ -10,17 +10,13 @@ from fetchers.mapper import get_fetcher
 from logging import Logger
 
 class EventStream:
-    """Container for Events.
-    
-    Fetches event articles for all new NewsEvents before adding them to some
-    sequence/linked structure.
-    """
+    """Container for Events. Also fetches articles for NewsEvents."""
     def __init__(self, logging: Logger, config: dict):
         self._events = []           # replace with other data structures for experiments
         self._logging = logging
         self._config = config
         
-        if self._config['pickle']['autoLoad']:      # load events from previous sessions
+        if self._config['pickle']['auto_load']:     # load events from previous sessions
             self._load_pickle()
         
     def __getitem__(self, j):

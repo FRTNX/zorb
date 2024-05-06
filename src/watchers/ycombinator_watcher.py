@@ -17,10 +17,10 @@ class YCombinatorWatcher(WatcherBase):
         self._event_stream = event_stream
         self._config = config
         self._logging = logging
-        self._update_interval = 120
+        self._update_interval = config['update_interval']
         
     def start(self):
-        """Ineffective in this context. Here to meet base class requirements."""
+        """Starts _update thread that runs every update_interval."""
         update_thread = threading.Thread(target=self._update)
         update_thread.start()
         return
@@ -34,7 +34,7 @@ class YCombinatorWatcher(WatcherBase):
         """Absorb new YCombinator Hacker News events."""
         self._logging.info('Fetching YCombinator Hacker News...')
         data = []                                      # stores all relevant data across pages
-        num_pages = self._config['numPages']           # number of pages to fetch
+        num_pages = self._config['num_pages']          # number of pages to fetch
         for page_number in range(1, num_pages + 1):    # pages are 1-indexed
             try:
                 response = requests.get(f'http://hn.algolia.com/api/v1/search_by_date?page={page_number}')
@@ -57,7 +57,6 @@ class YCombinatorWatcher(WatcherBase):
                     )
                     self._event_stream.add(event)  
             self._logging.info('Updated YCombinator Hacker News.')
-
         
     def _update(self):
         """Update events every _update_interval."""

@@ -1,24 +1,28 @@
 from colorama import Fore
 
+# Contaiins application-wide configurations. Using a python file for
+# the versatility: comments, transformations, etc.
 config = {
    'watchers': {
         'libera': {
             'path': '/home/frtnx/irclogs/LiberaChat',
             'targets': ['##news.log'],
-            'autoUpdate': False,
-            'updateInterval': 1
+            'update_interval': 1
         },
         'ycombinator': {
-            'autoUpdate': True,
-            'updateInterval': 600,
-            'numPages': 5
+            'update_interval': 60 * 5,       # every 5 minutes
+            'num_pages': 5
+        },
+        'techcrunch': {
+            'update_interval': 60 * 30,      # every 30 minutes
+            'num_pages': 5
         }
     },
     'eventStream': {
         'pickle': {
             'path': './',
             'filename': 'event_stream.pkl',
-            'autoLoad': True
+            'auto_load': True
         }
     },
     'logging': {

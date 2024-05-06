@@ -6,10 +6,11 @@ from logging import Logger
 
 from .libera_chat_watcher import LiberaChatWatcher
 from .ycombinator_watcher import YCombinatorWatcher
+from .techcrunch_watcher import TechCrunchWatcher
 
 from event_stream import EventStream
 
-ACTIVE_WATCHERS = [LiberaChatWatcher, YCombinatorWatcher]
+ACTIVE_WATCHERS = [LiberaChatWatcher, YCombinatorWatcher, TechCrunchWatcher]
 
 class WatchMan:
     """Manages all watchers."""

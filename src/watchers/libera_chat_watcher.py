@@ -32,7 +32,7 @@ class LiberaChatWatcher(WatcherBase):
             file_handler.retro_zorb()                 # absorb existing logs into event stream
             self._file_handlers.append(file_handler)
         watchdog_thread = threading.Thread(target=self._launch_observers)
-        watchdog_thread.start()                       # deploy watchdogs
+        watchdog_thread.start()                       # deploy watchdog
         
     def stop(self):
         """Stop fetcher, stop watchdogs, handle clean up."""
@@ -63,7 +63,7 @@ class LiberaChatWatcher(WatcherBase):
         
         try:
             while True:
-                time.sleep(self._config['updateInterval'])
+                time.sleep(self._config['update_interval'])
         finally:
             observer.unschedule_all()
             observer.stop()
