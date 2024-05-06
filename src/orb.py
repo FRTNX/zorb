@@ -10,7 +10,7 @@ class Orb:
     
     def events(self):
         """Returns all events."""
-        return self._event_stream.event()
+        return self._event_stream.events()
     
     def events_by_keyword(self, k):
         """Finds all events with keyword in title."""

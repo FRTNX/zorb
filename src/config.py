@@ -18,7 +18,7 @@ config = {
             'num_pages': 5
         }
     },
-    'eventStream': {
+    'event_stream': {
         'pickle': {
             'path': './',
             'filename': 'event_stream.pkl',

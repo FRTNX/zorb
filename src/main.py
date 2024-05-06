@@ -11,7 +11,7 @@ from config import config
 from logger import logging
 
 # the idea is to have a single event stream, used where needed
-event_stream = EventStream(logging=logging, config=config['eventStream'])
+event_stream = EventStream(logging=logging, config=config['event_stream'])
 
 watchman = WatchMan(event_stream=event_stream, config=config['watchers'], logging=logging)
 watchman.deploy()
