@@ -33,7 +33,8 @@ class EventStream:
     def __contains__(self, event: Event) -> bool:
         """Returns True if event already exists in event stream."""
         for existing_event in self._events:
-            if event.title == existing_event.title:
+            if event.title == existing_event.title and \
+                event.article_url == existing_event.article_url:
                 return True
         return False
     
@@ -78,7 +79,7 @@ class EventStream:
             return
         
         if type(event) == NewsEvent:
-            if event.article_url:
+            if not event.article:                        # fetch news event article
                 article = self._fetch_article(event.source, event.article_url)
                 if article:
                     event.set_article(article)

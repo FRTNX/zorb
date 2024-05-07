@@ -1,5 +1,7 @@
 # dev
 src/event_stream.pkl
+src/watchers/sources.txt
+src/watchers/news_api_data.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

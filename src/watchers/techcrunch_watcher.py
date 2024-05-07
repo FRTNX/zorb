@@ -1,4 +1,3 @@
-# events
 import time
 import requests
 

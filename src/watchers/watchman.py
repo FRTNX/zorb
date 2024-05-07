@@ -1,12 +1,9 @@
-import os
-import time
-import threading
-
 from logging import Logger
 
 from .libera_chat_watcher import LiberaChatWatcher
 from .ycombinator_watcher import YCombinatorWatcher
 from .techcrunch_watcher import TechCrunchWatcher
+from .al_jazeera_watcher import AlJezeeraWatcher
 
 from event_stream import EventStream
 
