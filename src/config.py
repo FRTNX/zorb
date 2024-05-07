@@ -30,7 +30,11 @@ config = {
         'pickle': {
             'path': './',
             'filename': 'event_stream.pkl',
-            'auto_load': True
+            'auto_load': True,
+            'meta': {
+                'path': './',
+                'filename': 'event_stream_meta.json'
+            }
         }
     },
     'logging': {
