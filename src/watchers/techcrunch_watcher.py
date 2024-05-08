@@ -68,7 +68,7 @@ class TechCrunchWatcher(WatcherBase):
                     for item in response_data                            # comprehension go brrr
                 ]
                 data += target_attributes
-                # todo: consider time.sleep here to avoid being blocked by techcrunch servers
+                # todo: consider time.sleep here to avoid being flagged by techcrunch servers
             except Exception as e:
                 self._logging.error('Error fetching TechCrunch events: ' + str(e))
                 continue                                                 # in case error is localised
