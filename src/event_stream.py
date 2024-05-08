@@ -105,19 +105,15 @@ class EventStream:
                                    self._config['pickle']['filename'])
         with open(pickle_file, 'wb') as f:
             pickle.dump(self._events, f)
-            
+
         meta_file = os.path.join(self._config['pickle']['meta']['path'],
-                                 self._config['pickle']['meta']['filename'])
-        latest_event = self._events[-1].json()
-    
+                                 self._config['pickle']['meta']['filename'])    
         meta = {
             'event_count': len(self),
-            'most_recent_event': latest_event['title']
+            # todo: add other useful metadata
         }
-        
         with open(meta_file, 'w') as f:
             f.write(json.dumps(meta))
-    
         self._logging.info(f"Event stream and metadata saved successfully ({len(self)}).")
         
     def _load_pickle(self):

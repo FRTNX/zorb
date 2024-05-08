@@ -101,9 +101,8 @@ class FileHandler:
         with open(os.path.join(self._filepath, self._filename)) as logs:
             existing_logs = logs.readlines()
             log_count = len(existing_logs)
-            
             if log_count > 1000:
-                start_index = log_count - (log_count * 0.1)  # only try load the last 10% of the log file
+                start_index = log_count - 100           # only load the last 100 logs
                 existing_logs = existing_logs[start_index:]
                 
             for log in existing_logs:

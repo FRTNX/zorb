@@ -41,7 +41,9 @@ config = {
         'tag_style': Fore.GREEN + 'zorb' + Fore.RESET,
         'date_style': Fore.LIGHTBLACK_EX + '%Y-%m-%d %H:%M:%S' + Fore.RESET
     },
-    'news_api': {
-        'api_key': os.getenv('NEWS_API_KEY')
+    # The Shogun API is a closed-source extension of zorb that deals with extracting
+    # events from external sites
+    'shogun_api': {
+        'api_key': os.getenv('SHOGUN_API_KEY')
     }
 }
