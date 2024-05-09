@@ -23,24 +23,24 @@ HEADERS = {
 class TechCrunchWatcher(WatcherBase):
     """TechCrunch watcher."""
     NAME = 'techcrunch'
-    
+
     def __init__(self, event_stream: EventStream, config: dict, logging: Logger):
         self._event_stream = event_stream
         self._config = config
         self._logging = logging
         self._update_interval = config['update_interval']
-        
+        self._active = False
+
     def start(self):
         """Starts TechCrunch _update thread, run every update_interval."""
+        self._active = True
         update_thread = threading.Thread(target=self._update)
         update_thread.start()
-        return
-    
-    # future method
+
     def stop(self):
         """Stop TechCrunch watcher, threads, handle clean up."""
-        return
-        
+        self._active = False
+
     def zorb(self):
         """Absorb new TechCrunch events."""
         self._logging.info('Fetching TechCrunch events...')
@@ -57,7 +57,7 @@ class TechCrunchWatcher(WatcherBase):
                 response = requests.get('https://techcrunch.com/wp-json/tc/v1/magazine', params=params, headers=HEADERS)
                 response.raise_for_status()
                 response_data = response.json()
-                
+
                 # techcrunch response jsons are massive. only selecting what we need
                 # so as not to keep bloat data in memory.
                 target_attributes = [
@@ -72,7 +72,7 @@ class TechCrunchWatcher(WatcherBase):
             except Exception as e:
                 self._logging.error('Error fetching TechCrunch events: ' + str(e))
                 continue                                                 # in case error is localised
-        
+
         if len(data) > 0:
             for item in data:
                 event = NewsEvent(
@@ -82,9 +82,9 @@ class TechCrunchWatcher(WatcherBase):
                 )
                 self._event_stream.add(event)  
             self._logging.info('Updated TechCrunch events.')
-        
+
     def _update(self):
         """Update TechCrunch events every _update_interval."""
-        while True:
+        while self._active:
             self.zorb()
             time.sleep(self._update_interval)

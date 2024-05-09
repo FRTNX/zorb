@@ -8,6 +8,11 @@ load_dotenv()
 # the versatility: comments, transformations, etc.
 config = {
    'watchers': {
+       # using http://www.msftncsi.com/ncsi.txt for connectivity pings costs
+       # 2 kilobytes per ping. target zorb uptime is about 12 hours, so calling once
+       # every minute results in 1440KB used for connection tests per 12 hour session.
+       # todo: find sites/api's with response size < 2KB and test every 30 seconds
+        'connection_test_interval': 60,      # every 60 seconds
         'libera': {
             'path': '/home/frtnx/irclogs/LiberaChat',
             'targets': ['##news.log'],
@@ -15,11 +20,11 @@ config = {
         },
         'ycombinator': {
             'update_interval': 60 * 5,       # every 5 minutes
-            'num_pages': 5
+            'num_pages': 2
         },
         'techcrunch': {
             'update_interval': 60 * 30,      # every 30 minutes
-            'num_pages': 5
+            'num_pages': 1
         },
         'al_jezeera': {
             'update_interval': 15,

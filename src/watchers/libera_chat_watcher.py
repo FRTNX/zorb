@@ -17,40 +17,47 @@ from logging import Logger
 class LiberaChatWatcher(WatcherBase):
     """Watches for file changes in irssi Libera Chat log files."""
     NAME = 'libera'
-    
+
     def __init__(self, event_stream: EventStream, config: dict, logging: Logger):
         self._config = config
         self._event_stream = event_stream
         self._logging = logging
         self._file_handlers = []
-        
+        self._observer = None                                  # initialising here for easy access
+        self._active = False
+
     def start(self):
         """Start Libera Chat log file watchers."""
+        self._active = True
+        watchdog_thread = threading.Thread(target=self._launch_observers)
+        watchdog_thread.start()                               # deploy watchdog
         for target in self._config['targets']:
             file_handler = FileHandler(filename=target, filepath=self._config['path'],
                                        event_stream=self._event_stream, logging=self._logging)
             file_handler.retro_zorb()                         # absorb existing logs into event stream
             self._file_handlers.append(file_handler)
-        watchdog_thread = threading.Thread(target=self._launch_observers)
-        watchdog_thread.start()                               # deploy watchdog
-        
-    # future method
+
     def stop(self):
         """Stop fetcher, stop watchdogs, handle clean up."""
-        return
-    
+        self._active = False                                  # deactivate watcher
+        self._file_handlers = []                              # remove file handlers
+        if self._observer.is_alive():
+            self._observer.unschedule_all()                   # unschedule watchdog observers
+            self._observer.stop()
+            self._observer.join()
+
     def zorb(self, filename):
         """Absorb new events. Triggered when watchdog detects new logs."""
         for file_handler in self._file_handlers:
             if file_handler.filename == filename:
                 file_handler.zorb_new_events()
-                
+
     def _launch_observers(self):
         """Launch watchdog observers (typically from thread)."""
         self._logging.info('Launching watchdog observer...')
         event_handler = FileModifiedEventHandler(watcher=self, config=self._config,
                                                  logging=self._logging)
-        observer = Observer()
+        self._observer = Observer()
         observables = [
             {
                 'name': 'libera',
@@ -59,20 +66,20 @@ class LiberaChatWatcher(WatcherBase):
             }
         ]
         for observable in observables:
-            observer.schedule(observable['handler'], observable['path'])
-        observer.start()
-        
+            self._observer.schedule(observable['handler'], observable['path'])
+        self._observer.start()
+
         try:
             while True:
                 time.sleep(self._config['update_interval'])
         finally:
-            observer.unschedule_all()
-            observer.stop()
-            observer.join()
+            self._observer.unschedule_all()
+            self._observer.stop()
+            self._observer.join()
 
 class FileHandler:
     """Watches for log file changes and adds new events to event stream."""
-    
+
     def __init__(self, filename, filepath, event_stream, logging: Logger):
         self._filename = filename
         self._filepath = filepath
@@ -80,11 +87,11 @@ class FileHandler:
         self._logging = logging
         self._lastline = None
         self._last_modified = datetime.now()
-    
+
     @property
     def filename(self):
         return self._filename
-    
+
     def add(self, log):
         tag, log = log.split('>')                       # todo: extract time stamp
         source, log = log.split(']')
@@ -102,16 +109,16 @@ class FileHandler:
             existing_logs = logs.readlines()
             log_count = len(existing_logs)
             if log_count > 1000:
-                start_index = log_count - 100           # only load the last 100 logs
+                start_index = log_count - 500           # only load the last 500 logs
                 existing_logs = existing_logs[start_index:]
-                
+
             for log in existing_logs:
                 try:
                     self.add(log)
                     self._lastline = log
                 except ValueError:
                     continue
-                    
+
     def zorb_new_events(self):
         """Triggered by watchman. Adds new events to event stream."""
         with open(os.path.join(self._filepath, self._filename)) as file:
@@ -133,5 +140,5 @@ class FileModifiedEventHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         path, filename = os.path.split(event.src_path)
-        if not event.is_directory and filename in self._config['targets']:            
+        if not event.is_directory and filename in self._config['targets']:
             self._watcher.zorb(filename)
