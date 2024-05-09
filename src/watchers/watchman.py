@@ -44,14 +44,18 @@ class WatchMan:
         self._watchers_active = False
 
     def _monitor_connection(self):
+        """Stops watchers if offline."""
         while True:
             zorb_online = online()
-            self._logging.info(f'Is online: {zorb_online}')
+            self._logging.info(f'Is online: {zorb_online}')  # remove after resolving double subs on redeploys 
+            
             if zorb_online and not self._watchers_active:
                 self._logging.info('Connection established. Deploying watchers...')
-                self.deploy()                              # redeploy watchers once online again
+                self.deploy()                                # redeploy watchers once online again
+                
             if not zorb_online and self._watchers_active:
                 self._logging.info('Connection lost. Stopping watchers...')
                 self.terminate()
+        
             time.sleep(self._config['connection_test_interval'])
 

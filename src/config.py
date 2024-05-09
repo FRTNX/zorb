@@ -19,7 +19,7 @@ config = {
             'update_interval': 1
         },
         'ycombinator': {
-            'update_interval': 60 * 5,       # every 5 minutes
+            'update_interval': 60 * 10,       # every 10 minutes
             'num_pages': 2
         },
         'techcrunch': {

@@ -1,6 +1,6 @@
 import os
 import time
-import json
+import timeit  # benchmarking
 
 import pickle
 import threading
@@ -9,6 +9,11 @@ from events import NewsEvent, Event
 from fetchers.mapper import get_fetcher
 
 from logging import Logger
+
+# todo: move to a utils file
+def segment_data(data: list, segment_size: int):
+    """Segment list in segments of size segment_size."""
+    return [data[i:i + segment_size] for i in range(0, len(data), segment_size)]
 
 class EventStream:
     """Container for Events. Also fetches articles for NewsEvents."""
@@ -104,28 +109,35 @@ class EventStream:
                                    self._config['pickle']['filename'])
         with open(pickle_file, 'wb') as f:
             pickle.dump(self._events, f)
-
-        meta_file = os.path.join(self._config['pickle']['meta']['path'],
-                                 self._config['pickle']['meta']['filename'])    
-        meta = {
-            'event_count': len(self),
-            # todo: add other useful metadata
-        }
-        with open(meta_file, 'w') as f:
-            f.write(json.dumps(meta))
-        self._logging.info(f"Event stream and metadata saved successfully ({len(self)}).")
+        self._logging.info(f"Event stream saved successfully ({len(self)}).")
         
     def _load_pickle(self):
-        """Loads pickled event stream from previous session. Typically called on instantiation.
-        """
+        """Loads pickled event stream from previous session. Typically called on instantiation."""
+        def _load_pickled_events(segment):
+            """Parallel process helper."""
+            for event in segment:
+                self.add(event)
+
         self._logging.info('Loading pickled event stream...')
         pickle_file = os.path.join(self._config['pickle']['path'],
                                    self._config['pickle']['filename'])
+        pickled_event_count = 0
+        start = timeit.default_timer()
+        # split events and load in parallel
         with open(pickle_file, 'rb') as pickle_data:
             events = pickle.loads(pickle_data.read())
-            for event in events:
-                self.add(event)
-        self._logging.info('Successfully loaded pickled event stream.')
+            pickled_event_count = len(events)
+            if pickled_event_count > 1000:
+                segment_size = pickled_event_count // 10 # todo: find maximum num of effective threads
+                segments = segment_data(events, segment_size)
+                threads = []
+                for segment in segments:
+                    threads.append(threading.Thread(target=_load_pickled_events, args=(segment,)))
+                for thread in threads:
+                    thread.start()
+                    thread.join()
+        stop = timeit.default_timer()
+        self._logging.info(f'Successfully loaded {pickled_event_count} pickled events in {stop-start} secs.')
             
     def _merge_pickles(self, directory: str):
         """Merge all pickles in directory."""

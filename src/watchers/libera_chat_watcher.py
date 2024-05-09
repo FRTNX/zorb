@@ -109,7 +109,8 @@ class FileHandler:
             existing_logs = logs.readlines()
             log_count = len(existing_logs)
             if log_count > 1000:
-                start_index = log_count - 500           # only load the last 500 logs
+                # note: adjust according to intake requirements
+                start_index = log_count - 100           # only load the last 100 logs
                 existing_logs = existing_logs[start_index:]
 
             for log in existing_logs:
