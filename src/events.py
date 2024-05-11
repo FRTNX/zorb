@@ -57,5 +57,8 @@ class NewsEvent(Event):
             'title': self._title,
             'source': self._source,
             'article_url': self._article_url,
-            'article': self._article
+            'article': self._article,
+            'created': self._created,
+            'updated': self._updated,
+            'creation': self._creation
         }

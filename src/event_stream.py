@@ -1,6 +1,5 @@
 import os
 import time
-import timeit  # benchmarking
 
 import pickle
 import threading
@@ -115,28 +114,26 @@ class EventStream:
         """Loads pickled event stream from previous session. Typically called on instantiation."""
         def _load_pickled_events(segment):
             """Parallel process helper."""
-            for event in segment:
-                self.add(event)
+            [self.add(event) for event in segment]
 
         self._logging.info('Loading pickled event stream...')
         pickle_file = os.path.join(self._config['pickle']['path'],
                                    self._config['pickle']['filename'])
         pickled_event_count = 0
-        start = timeit.default_timer()
+        start = time.perf_counter()
         # split events and load in parallel
         with open(pickle_file, 'rb') as pickle_data:
             events = pickle.loads(pickle_data.read())
             pickled_event_count = len(events)
             if pickled_event_count > 1000:
-                segment_size = pickled_event_count // 10 # todo: find maximum num of effective threads
+                segment_size = 1000                      # let each thread handle 1000 events
                 segments = segment_data(events, segment_size)
-                threads = []
-                for segment in segments:
-                    threads.append(threading.Thread(target=_load_pickled_events, args=(segment,)))
+                self._logging.info(f'Processing {pickled_event_count} events on {len(segments)} threads.')
+                threads = [threading.Thread(target=_load_pickled_events, args=(segment,)) for segment in segments]
                 for thread in threads:
                     thread.start()
                     thread.join()
-        stop = timeit.default_timer()
+        stop = time.perf_counter()
         self._logging.info(f'Successfully loaded {pickled_event_count} pickled events in {stop-start} secs.')
             
     def _merge_pickles(self, directory: str):
@@ -145,8 +142,7 @@ class EventStream:
             event_stream_file = os.path.join(directory, pickle_file)
             with open(event_stream_file, 'rb') as pickle_data:         
                 stream = pickle.loads(pickle_data.read())
-                for event in stream:
-                    self.add(event)
+                [self.add(event) for event in stream]
             
     def auto_save(self, interval=60):
         """Automatically pickle event stream every interval."""

@@ -56,6 +56,5 @@ class WatchMan:
             if not zorb_online and self._watchers_active:
                 self._logging.info('Connection lost. Stopping watchers...')
                 self.terminate()
-        
             time.sleep(self._config['connection_test_interval'])
 
