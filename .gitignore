@@ -3,6 +3,7 @@ src/event_stream.pkl
 src/watchers/sources.txt
 src/watchers/news_api_data.json
 src/event_stream_meta.json
+src/zorb_wordcloud-*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

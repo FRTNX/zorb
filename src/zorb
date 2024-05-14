@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # command-line client
+# for ease of use, move to /usr/local/bin then make executable with
+# sudo chmod +x zorb. examlple usage: ~$ zorb -k Ukraine
+import os
 import requests
+
 from argparse import ArgumentParser
+
 from colorama import Fore
 
 BASE_URL = 'http://127.0.0.1:8000'
@@ -10,6 +15,8 @@ parser = ArgumentParser(description='Query events from zorb event stream.')
 
 parser.add_argument('-k', '--keyword', type=str,
     help='Fetch events that include keyword.')
+parser.add_argument('-wc', '--wordcloud', action='store_true',
+    help='Generate a wordcloud image from the current event stream.')
 
 args = parser.parse_args()
 
@@ -28,3 +35,6 @@ if __name__ == '__main__':
             for event in response_data['events']:
                 print(tag('⊕'), event['_title'])
             print(tag('Σ'), 'Hits:', len(response_data['events']))
+            
+    if args.wordcloud:
+        os.system('./zorb_wordcloud.py')
