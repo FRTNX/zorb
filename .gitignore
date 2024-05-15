@@ -4,6 +4,9 @@ src/watchers/sources.txt
 src/watchers/news_api_data.json
 src/event_stream_meta.json
 src/zorb_wordcloud-*
+src/labeled_events.json
+src/unlabeled_events.json
+src/zorb_training_data.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
