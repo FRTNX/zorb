@@ -5,12 +5,12 @@
 # ps: make sure to run events through ner first, before normalising for intent
 from __future__ import unicode_literals, print_function
 
-import plac
 import json
 import random
 import requests
-from pathlib import Path
 import spacy
+from spacy.training import GoldParse
+from spacy.language import EntityRecognizer
 from spacy.util import minibatch, compounding
 from spacy.training.example import Example
 
@@ -111,6 +111,49 @@ class Annotator:
         """Called after a new training instance is successfully added to TRAIN_DATA."""
         with open(train_data_file, 'w') as f:
             f.write(json.dumps({ 'data': TRAIN_DATA }))
+            
+
+class NERCustomiser:
+    """Adds custom entities to spaCy's NER."""
+    
+    def __init__(self):
+        self._nlp = spacy.load('en', entity=False, parser=False)
+        self._doc_list = []
+        self._gold_list = []
+        self._custom_entities = []
+        
+    def add(self, event):
+        doc = self._nlp(event)
+        self._doc_list.append(doc)
+        labels = []
+        for token in doc:
+            label = input(f'{token}: ')
+            labels.append(u'%s' % label)
+        
+        self._gold_list.append(GoldParse(doc, labels))
+        entity_types = [label for label in labels if label != u'O']
+        [
+            self._custom_entites.append(entity) for entity in entity_types
+            if entity not in self._custom_entities
+        ]
+        
+    def update(self):
+        """Update spaCy entities with our custom entities."""
+        ner = EntityRecognizer(self._nlp.vocab, entity_types=self._entity_types)
+        ner.update(self._doc_list, self._gold_list)
+        
+    def test(self, events):
+        results = []
+        for event in events:
+            doc = self._nlp(event)
+            entities = [{
+                'entity': entity.label_,
+                'value': entity.text,
+                'start': entity.start_char,
+                'end': entity.end_char
+            } for entity in doc.ents]
+            results.append({ 'text': event, 'entities': entities })
+        return results    
         
 
 if __name__ == "__main__":
