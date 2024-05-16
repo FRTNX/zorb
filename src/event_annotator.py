@@ -9,12 +9,17 @@ import os
 import json
 import random
 import requests
+from pathlib import Path
 import spacy
 # from spacy.training import GoldParse
 # from spacy.language import EntityRecognizer
 from spacy.util import minibatch, compounding
 from spacy.training.example import Example
 
+CUSTOM_ENTITIES = ['COMPANY']
+
+ENTITIES = ['PERSON', 'NORP', 'FAC', 'GPE', 'LOC', 'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE',
+            'DATE', 'TIME', 'PERCENT', 'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL'] + CUSTOM_ENTITIES
 
 TRAIN_DATA = []
 
@@ -26,8 +31,10 @@ class ZorbAnnotator:
     def __init__(self):
         self._events = []                                        # might switch to stacks
         self._processed = []                                     # stores processed events
-        self._nlp = spacy.blank('en')
-        self._load_data()                                        # populate self._events (and self._processed)
+        self._nlp = None
+        self._output_dir = 'data'
+        self._model_dir = f'{self._output_dir}/model'
+        self._load_data()                                        # load model, populate self._events (and self._processed)
         
     def annotate(self):
         """"Interactively populate dependency heads and labels from user input."""
@@ -37,7 +44,7 @@ class ZorbAnnotator:
             
             heads = []
             print(event)
-            print('>>>>>>HEADS<<<<<<')
+            print('>>>>>>DEPENDENCY HEADS<<<<<<')
             for index in tokenized_event.keys():                 # keys indices, values tokens
                 dep_head = input(f'{tokenized_event[index]} [{index}]: ')
                 # todo: support skipping current event
@@ -47,7 +54,7 @@ class ZorbAnnotator:
                 
             deps = []
             print(event)
-            print('>>>>>>DEPS<<<<<<')
+            print('>>>>>>LABELS<<<<<<')
             for token in tokenized_event.values():
                 label = input(f'{token} [-]: ')
                 if label == '':
@@ -62,15 +69,15 @@ class ZorbAnnotator:
     # thank you spaCy devs               
     def _train(self, n_iter: int=15):
         """Load the model, set up the pipeline and train the parser."""
-        if "parser" in self._nlp.pipe_names:
-            self._nlp.remove_pipe("parser")
-        parser = self._nlp.add_pipe("parser")
+        if 'parser' in self._nlp.pipe_names:
+            self._nlp.remove_pipe('parser')
+        parser = self._nlp.add_pipe('parser')
 
         for text, annotations in TRAIN_DATA:
-            for dep in annotations.get("deps", []):
+            for dep in annotations.get('deps', []):
                 parser.add_label(dep)
 
-        pipe_exceptions = ["parser", "trf_wordpiecer", "trf_tok2vec"]
+        pipe_exceptions = ['parser', 'trf_wordpiecer', 'trf_tok2vec']
         other_pipes = [pipe for pipe in self._nlp.pipe_names if pipe not in pipe_exceptions]
         with self._nlp.disable_pipes(*other_pipes):
             optimizer = self._nlp.begin_training()
@@ -83,9 +90,9 @@ class ZorbAnnotator:
                         doc = self._nlp.make_doc(text)
                         example = Example.from_dict(doc, annotations)
                         self._nlp.update([example], sgd=optimizer, losses=losses)
-                print("Losses", losses)
+                print('Losses', losses)
 
-        self._test_model()                                                     # test updated model
+        self._test_model()                # test updated model
         
     def _test_model(self):
         """Test current model."""
@@ -93,7 +100,7 @@ class ZorbAnnotator:
         docs = self._nlp.pipe(test_events)
         for doc in docs:
             print(doc.text)
-            print([(t.text, t.dep_, t.head.text) for t in doc if t.dep_ != "-"])
+            print([(token.text, token.dep_, token.head.text) for token in doc if token.dep_ != '-'])
         
     def _tokeinize(self, event: list) -> dict:
         """Return indexed event tokens."""
@@ -102,33 +109,49 @@ class ZorbAnnotator:
         return { index: str(tokenized_event[index]) for index in token_indices }
     
     def _load_data(self):
-        """Load data from previous session, if present."""
-        if 'unlabeled_events.json' in os.listdir():  # load previously fetched events, if present
-            with open('unlabeled_events.json', 'r') as f:
-                self._events = json.loads(f.read())['events']
+        """Load model and data from previous session, if present."""
+        # create required directories, if not exist
+        Path(f'{self._output_dir}/model').mkdir(parents=True, exist_ok=True)
+        
+        if 'meta.json' in os.listdir(self._model_dir):
+            self._nlp = spacy.load(self._model_dir)   # load existing model
+        else:
+            self._nlp = spacy.blank('en')                         # initialise a new model
             
-        if 'labeled_events.json' in os.listdir():    # load labeled events from prev session, if present
-            with open('labeled_events.json') as f:
+        data_files = os.listdir(self._output_dir)
+        
+        if 'zorb_training_data.json' in data_files: # load existing training data
+            with open(f'{self._output_dir}/zorb_training_data.json', 'r') as f:
+                TRAIN_DATA = json.loads(f.read())['data']
+                
+        if 'unlabeled_events.json' in data_files:   # load previously fetched events, if present
+            with open(f'{self._output_dir}/unlabeled_events.json', 'r') as f:
+                self._events = json.loads(f.read())['events']
+                
+        if 'labeled_events.json' in data_files:     # load labeled events from prev session, if present
+            with open(f'{self._output_dir}/labeled_events.json') as f:
                 self._processed = json.loads(f.read())['events']
             
-        if len(self._events) == 0:                   # above statements did not run
+        if len(self._events) == 0:                  # above statements did not run
             response = requests.get('http://localhost:8000/events')
             response.raise_for_status()
             response_data = response.json()
-            
-            with open('unlabeled_events.json', 'w') as f:
-                f.write(json.dumps(response_data))
-            self._events =[event['title'] for event in response_data['events']]
+            events = [event['title'] for event in response_data['events']]
+            with open(f'{self._output_dir}/unlabeled_events.json', 'w') as f:
+                f.write(json.dumps({ 'events': events }))
+            self._events = events
             
     def _save_data(self):
         """Persist current training data, self._events, and self._processed."""
-        with open('zorb_training_data.json', 'w') as f:          # save current TRAIN_DATA
+        self._nlp.to_disk(self._model_dir)           # save current model
+        
+        with open(f'{self._output_dir}/zorb_training_data.json', 'w') as f:          # save current TRAIN_DATA
             f.write(json.dumps({ 'data': TRAIN_DATA }))
             
-        with open('unlabeled_events.json', 'w') as f:            # save unprocessed events
+        with open(f'{self._output_dir}/unlabeled_events.json', 'w') as f:            # save unprocessed events
             f.write(json.dumps({ 'events': self._events }))
             
-        with open('labeled_events.json', 'w') as f:
+        with open(f'{self._output_dir}/labeled_events.json', 'w') as f:
             f.write(json.dumps({ 'events': self._processed }))   # save processed events
             
 

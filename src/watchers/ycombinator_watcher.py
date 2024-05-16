@@ -49,7 +49,7 @@ class YCombinatorWatcher(WatcherBase):
             for item in data:
                 title = item.get('story_title') if item.get('story_title') else item.get('title')
                 article_url = item.get('story_url') if item.get('story_url') else item.get('url')
-                if title and article_url:              # invalid event, ignore
+                if title and article_url:              # required attributes
                     event = NewsEvent(
                         title=title,
                         source=self.NAME,

@@ -7,6 +7,7 @@ src/zorb_wordcloud-*
 src/labeled_events.json
 src/unlabeled_events.json
 src/zorb_training_data.json
+src/data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
