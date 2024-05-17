@@ -4,6 +4,8 @@
 # on zorb events.
 # NOTE: make sure to run events through ner first, before normalising for intent
 from __future__ import unicode_literals, print_function
+from typing import Dict, List, Tuple, Literal
+from zorb_types import DependencyTree, Label
 
 import os
 import json
@@ -21,7 +23,7 @@ from spacy.training.example import Example
 LABELS = ['PERSON', 'NORP', 'FAC', 'GPE', 'LOC', 'ORG', 'PRODUCT', 'WORK_OF_ART', 'LAW', 'LANGUAGE',
             'DATE', 'TIME', 'PERCENT', 'MONEY', 'QUANTITY', 'ORDINAL', 'CARDINAL', '-']
 
-TRAIN_DATA = []
+TRAIN_DATA: List[DependencyTree] = []
 
 
 # to evolve into an intent classifier
@@ -29,27 +31,27 @@ class ZorbAnnotator:
     """Interactive interface for annotating zorb events. Updates and retrains per event."""
 
     def __init__(self):
-        self._events = []                                        # might switch to stacks
-        self._processed = []                                     # stores processed events
+        self._events: List[str] = []                              # might switch to stacks
+        self._processed: List[str] = []                           # stores processed events
         self._nlp = None
         self._output_dir = 'data'
         self._model_dir = f'{self._output_dir}/model'
         self._load_data()                                         # load model, populate self._events (and self._processed)
 
-    def annotate(self):
+    def annotate(self) -> None:
         """Interactively populate dependency heads and labels from user input."""
         index = 0
         while index <= len(self._events) - 1:
             try:
-                event = self._events[index]
-                tokenized_event = self._tokeinize(event)          # returns dict of indexed tokens
-                heads = self._dep_heads(event, tokenized_event)
-                deps = self._label(event, tokenized_event)
+                event: str = self._events[index]
+                tokenized_event: dict = self._tokeinize(event)    # returns dict of indexed tokens
+                heads: List[int] = self._dep_heads(event, tokenized_event)
+                deps: List[Label] = self._label(event, tokenized_event)
                 # verified = self._visualize_dependencies((event, {'heads': heads, 'deps': deps }))
                 # if verified:
                 #     TRAIN_DATA.append((event, { 'heads': heads, 'deps': deps }))         # add to TRAIN_DATA
                 # else:
-                #     continue                                      # retry current event
+                #     continue                                    # retry current event
                 TRAIN_DATA.append((event, { 'heads': heads, 'deps': deps }))         # add to TRAIN_DATA
                 self._processed.append(self._events.pop(self._events.index(event)))  # move event to processed list
                 self._save_data()                                 # persist data, as of this iter
@@ -58,15 +60,15 @@ class ZorbAnnotator:
             except AnnotationError:
                 continue                                          # skip this event
             
-    def _dep_heads(self, event: str, tokenized: dict) -> list:
+    def _dep_heads(self, event: str, tokenized: dict) -> List[int]:
         """Interactively populate dependency heads."""
         print(tokenized)                                          # helps user map tokens
         print(event)
         print('>>>>>>DEPENDENCY HEADS<<<<<<')
-        heads = []
-        index = 0                                                 # allows us to redo an iteration
-        while index <= len(tokenized.keys()) -1:
-            dep_head = input(f'{tokenized[index]} [{index}]: ')
+        heads: list[int] = []
+        index = 0
+        while index <= len(tokenized) - 1:                        # while loop allows us to redo an iteration
+            dep_head: str = input(f'{tokenized[index]} [{index}]: ')
             if dep_head == 'skip' or dep_head == 's':
                 raise AnnotationError('Skipping this event...')
             if dep_head == '':                                    # token is independent
@@ -78,15 +80,15 @@ class ZorbAnnotator:
             index += 1                                            # on to the next, if in range
         return heads
     
-    def _label(self, event: str, tokenized: dict) -> list:
+    def _label(self, event: str, tokenized: dict) -> List[Label]:
         """Interactively label tokens."""
         print('Supported labels:', LABELS)
         print(event)
         print('>>>>>>LABELS<<<<<<')
         deps = []
-        index = 0
-        while index <= len(tokenized.keys()) -1:
-            label = input(f'{tokenized[index]} [-]: ')
+        index: int = 0
+        while index <= len(tokenized) - 1:
+            label: Label = input(f'{tokenized[index]} [-]: ')
             if label == '':
                 label = '-'                                       # no-relation label
             if label.upper() not in LABELS:
@@ -96,13 +98,14 @@ class ZorbAnnotator:
             index += 1
         return deps
     
-    def _visualize_dependencies(self, dep_tree: tuple) -> bool:
-        """Visualise dependency tree"""
+    def _visualize_dependencies(self, dep_tree: DependencyTree) -> bool:
+        """Visualise dependency tree."""
         text, annotations = dep_tree
         doc = self._nlp.make_doc(text)
-        example = Example.from_dict(doc, annotations)
-        displacy.serve([example], style='dep')
-        result = input('Confirmed? [Y/n]: ')
+        # example = Example.from_dict(doc, annotations)
+        displacy.serve(doc, style='dep')
+        
+        result: Literal['y', 'n'] = input('Confirmed? [Y/n]: ')
         return True if result.lower() in ['', 'y'] else False
 
     # thank you spaCy devs
@@ -156,7 +159,7 @@ class ZorbAnnotator:
         if 'meta.json' in os.listdir(self._model_dir):
             self._nlp = spacy.load(self._model_dir)    # load existing model
         else:
-            self._nlp = spacy.blank('en_core_web_sm')  # start from pretrained
+            self._nlp = spacy.load('en_core_web_sm')  # start from pretrained
 
         data_files = os.listdir(self._output_dir)
 
