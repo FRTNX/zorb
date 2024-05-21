@@ -48,11 +48,11 @@ class WatchMan:
         while True:
             zorb_online = online()
             self._logging.info(f'Is online: {zorb_online}')  # remove after resolving double subs on redeploys 
-            
+
             if zorb_online and not self._watchers_active:
                 self._logging.info('Connection established. Deploying watchers...')
                 self.deploy()                                # redeploy watchers once online again
-                
+
             if not zorb_online and self._watchers_active:
                 self._logging.info('Connection lost. Stopping watchers...')
                 self.terminate()

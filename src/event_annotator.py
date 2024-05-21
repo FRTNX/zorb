@@ -47,25 +47,26 @@ class ZorbAnnotator:
                 tokenized_event: dict = self._tokeinize(event)    # returns dict of indexed tokens
                 heads: List[int] = self._dep_heads(event, tokenized_event)
                 deps: List[Label] = self._label(event, tokenized_event)
-                # verified = self._visualize_dependencies((event, {'heads': heads, 'deps': deps }))
-                # if verified:
-                #     TRAIN_DATA.append((event, { 'heads': heads, 'deps': deps }))         # add to TRAIN_DATA
-                # else:
-                #     continue                                    # retry current event
-                TRAIN_DATA.append((event, { 'heads': heads, 'deps': deps }))         # add to TRAIN_DATA
+                verified = self._visualize_dependencies((event, {'heads': heads, 'deps': deps }))
+
+                if verified:
+                    TRAIN_DATA.append((event, { 'heads': heads, 'deps': deps }))     # add to TRAIN_DATA
+                else:
+                    continue                                      # retry current event
+
                 self._processed.append(self._events.pop(self._events.index(event)))  # move event to processed list
                 self._save_data()                                 # persist data, as of this iter
                 self._train()                                     # train model with updated TRAIN_DATA
                 index += 1                                        # process next event
             except AnnotationError:
                 continue                                          # skip this event
-            
+
     def _dep_heads(self, event: str, tokenized: dict) -> List[int]:
         """Interactively populate dependency heads."""
         print(tokenized)                                          # helps user map tokens
         print(event)
         print('>>>>>>DEPENDENCY HEADS<<<<<<')
-        heads: list[int] = []
+        heads: List[int] = []
         index = 0
         while index <= len(tokenized) - 1:                        # while loop allows us to redo an iteration
             dep_head: str = input(f'{tokenized[index]} [{index}]: ')
@@ -79,7 +80,7 @@ class ZorbAnnotator:
                 continue                                          # index not incremented; retry
             index += 1                                            # on to the next, if in range
         return heads
-    
+
     def _label(self, event: str, tokenized: dict) -> List[Label]:
         """Interactively label tokens."""
         print('Supported labels:', LABELS)
@@ -97,14 +98,14 @@ class ZorbAnnotator:
             deps.append(label.upper())
             index += 1
         return deps
-    
+
     def _visualize_dependencies(self, dep_tree: DependencyTree) -> bool:
         """Visualise dependency tree."""
         text, annotations = dep_tree
         doc = self._nlp.make_doc(text)
         # example = Example.from_dict(doc, annotations)
         displacy.serve(doc, style='dep')
-        
+
         result: Literal['y', 'n'] = input('Confirmed? [Y/n]: ')
         return True if result.lower() in ['', 'y'] else False
 
@@ -144,7 +145,7 @@ class ZorbAnnotator:
             print(doc.text)
             print(json.dumps(
                 obj=[(token.text, token.dep_, token.head.text) for token in doc if token.dep_ != '-']))
-            
+
     def _tokeinize(self, event: list) -> dict:
         """Return dict where values are tokens and keys are their indices."""
         tokenized_event = self._nlp(event)
@@ -161,7 +162,7 @@ class ZorbAnnotator:
         else:
             self._nlp = spacy.load('en_core_web_sm')  # start from pretrained
 
-        data_files = os.listdir(self._output_dir)
+        data_files: List[str] = os.listdir(self._output_dir)
 
         if 'zorb_training_data.json' in data_files:    # load existing training data
             with open(f'{self._output_dir}/zorb_training_data.json', 'r') as f:
@@ -188,10 +189,10 @@ class ZorbAnnotator:
         """Persist current training data, self._events, and self._processed."""
         self._nlp.to_disk(self._model_dir)           # save current model
 
-        with open(f'{self._output_dir}/zorb_training_data.json', 'w') as f:          # save current TRAIN_DATA
+        with open(f'{self._output_dir}/zorb_training_data.json', 'w') as f:    # save current TRAIN_DATA
             f.write(json.dumps({ 'data': TRAIN_DATA }))
 
-        with open(f'{self._output_dir}/unlabeled_events.json', 'w') as f:            # save unprocessed events
+        with open(f'{self._output_dir}/unlabeled_events.json', 'w') as f:      # save unprocessed events
             f.write(json.dumps({ 'events': self._events }))
 
         with open(f'{self._output_dir}/labeled_events.json', 'w') as f:

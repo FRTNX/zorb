@@ -71,16 +71,17 @@ class EventStream:
         return sorted(sources.items(), key=lambda i: i[1], reverse=True)
 
     # uses threading to avoid bottleneck
-    def add(self, event: NewsEvent):
+    def add(self, event: NewsEvent, check_contains=True):
         """Add a new event to the event stream."""
-        add_event_thread = threading.Thread(target=self._add_util, args=(event,))
+        add_event_thread = threading.Thread(target=self._add_util, args=(event, check_contains))
         add_event_thread.start()
         
-    def _add_util(self, event: Event):
+    def _add_util(self, event: Event, check_contains):
         """Utility function called from thread."""
-        if self.__contains__(event):                     # event already exists, do nothing
-            self._logging.info('Event already exists. Skipping: ' + event.title)
-            return
+        if check_contains:
+            if self.__contains__(event):                     # event already exists, do nothing
+                self._logging.info('Event already exists. Skipping: ' + event.title)
+                return
         
         if type(event) == NewsEvent:
             if not event.article:                        # fetch news event article
@@ -114,7 +115,7 @@ class EventStream:
         """Loads pickled event stream from previous session. Typically called on instantiation."""
         def _load_pickled_events(segment):
             """Parallel process helper."""
-            [self.add(event) for event in segment]
+            [self.add(event, False) for event in segment]
 
         self._logging.info('Loading pickled event stream...')
         pickle_file = os.path.join(self._config['pickle']['path'],
