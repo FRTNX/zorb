@@ -17,6 +17,10 @@ parser.add_argument('-k', '--keyword', type=str,
     help='Fetch events that include keyword.')
 parser.add_argument('-wc', '--wordcloud', action='store_true',
     help='Generate a wordcloud image from the current event stream.')
+parser.add_argument('--start', action='store_true',
+    help='Start zorb server and event stream.')
+parser.add_argument('--stop', action='store_true',
+    help='Stop zorb server.')
 
 args = parser.parse_args()
 
@@ -38,3 +42,13 @@ if __name__ == '__main__':
             
     if args.wordcloud:
         os.system('./zorb_wordcloud.py')
+        
+    if args.start:
+        """"""
+        # start server
+        
+    if args.stop:
+        """"""
+        # get process id from server
+        # kill process
+        
